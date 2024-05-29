@@ -13,3 +13,4 @@ dist/
 build/
 *.egg-info/
 .env
+luke_walker_wiki_text.txt
