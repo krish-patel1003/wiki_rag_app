@@ -1,14 +1,17 @@
+from sentence_transformers import SentenceTransformer
+import numpy as np
 import faiss
-from sklearn.feature_extraction.text import TfidfVectorizer
 
 def store_chunks_in_faiss(chunks):
-    vectorizer = TfidfVectorizer()
-    X = vectorizer.fit_transform(chunks)
-    index = faiss.IndexFlatL2(X.shape[1])
-    index.add(X.toarray())
-    return index, vectorizer
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+    embeddings = model.encode(chunks, convert_to_tensor=True)
+    embeddings = np.array([embedding.cpu().numpy() for embedding in embeddings])
+    
+    index = faiss.IndexFlatL2(embeddings.shape[1])
+    index.add(embeddings)
+    return index, model
 
-def retrieve_relevant_chunks(query, vectorizer, index, chunks, k=3):
-    query_vector = vectorizer.transform([query]).toarray()
-    D, I = index.search(query_vector, k)
+def retrieve_relevant_chunks(query, model, index, chunks, k=3):
+    query_embedding = model.encode([query], convert_to_tensor=True).cpu().numpy()
+    D, I = index.search(query_embedding, k)
     return [chunks[i] for i in I[0]]

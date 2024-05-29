@@ -12,14 +12,14 @@ class Question(BaseModel):
 
 text = scrape_wiki_page("https://en.wikipedia.org/wiki/Luke_Skywalker", "luke_walker_wiki_text.txt")
 chunks = chunk_text(text)
-index, vectorizer = store_chunks_in_faiss(chunks)
+index, model = store_chunks_in_faiss(chunks)
 
 @app.post("/ask")
 def ask_question(question: Question):
     query = question.question
     try:
-        relevant_chunks = retrieve_relevant_chunks(query, vectorizer, index, chunks)
-        prompt = "\n".join(relevant_chunks)+ "\n\n"+ query
+        relevant_chunks = retrieve_relevant_chunks(query, model, index, chunks)
+        prompt = "\n".join(relevant_chunks) + "\n\n" + query
         print(prompt)
         answer = query_llm(prompt)
         return {"question": query, "answer": answer}
